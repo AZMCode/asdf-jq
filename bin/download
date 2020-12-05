@@ -46,9 +46,9 @@ get_assets_url() {
 
   declare -a asset_urls
   asset_urls=($(echo "$releases_json" | sed -n -E 's/[[:blank:]]*"assets_url":[[:blank:]]*"([^"]*)".*/\1/p'))
+
   declare -a tag_names
   tag_names=($(echo "$releases_json"  | sed -n -E 's/[[:blank:]]*"tag_name":[[:blank:]]*"([^"]*)".*/\1/p'))
-
 
   for i in "${!tag_names[@]}"; do
     if [ "${tag_names[$i]}" == "jq-$install_version" ]; then
@@ -124,7 +124,7 @@ download() {
     error_exit "Malformed URL"
   fi
 
-  if [ "$install_type" != "version" ]; then
+  if [ "$download_type" != "version" ]; then
     error_exit "Error: source downloads are not supported"
   fi
   echo "Downloading from ${download_url}" >&2

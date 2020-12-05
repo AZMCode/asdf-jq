@@ -4,6 +4,132 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-declare ASDF_INSTALL_PATH="$ASDF_DOWNLOAD_PATH"
-declare script_folder="$(dirname "$0")"
-. $script_folder/install
+readonly RELEASES_URL="https://api.github.com/repos/stedolan/jq/releases"
+
+
+error_exit() {
+  echo "$1" >&2
+  exit "${2:-1}"
+}
+
+get_platform() {
+  local testStr="$(uname | tr '[:upper:]' '[:lower:]')"
+  if [ "$testStr" == "darwin" ]; then
+    echo "osx"
+  else
+    echo "linux"
+  fi
+  return
+}
+get_arch(){
+  declare arch="$(uname -m)"
+  if [ "$arch" == 'x86_64' ]; then
+    echo '64'
+  elif [ "$arch" == 'i386' ]; then
+    echo '32'
+  elif [ "$arch" == 'i686' ]; then
+    echo '32'
+  else
+    error_exit 'Sadly, there are no official releases for your architecture'
+  fi
+  return
+}
+
+get_assets_url() {
+  declare install_version="$1"
+
+  if [ -n "${GITHUB_API_TOKEN:+defined}" ]; then
+    declare releases_json="$(curl -s "$RELEASES_URL")"
+  else
+    declare releases_json="$(curl -s "$RELEASES_URL" -H "Authorization: token $GITHUB_API_TOKEN")"
+  fi
+
+  declare -a asset_urls
+  asset_urls=($(echo "$releases_json" | sed -n -E 's/[[:blank:]]*"assets_url":[[:blank:]]*"([^"]*)".*/\1/p'))
+  declare -a tag_names
+  tag_names=($(echo "$releases_json"  | sed -n -E 's/[[:blank:]]*"tag_name":[[:blank:]]*"([^"]*)".*/\1/p'))
+
+
+  for i in "${!tag_names[@]}"; do
+    if [ "${tag_names[$i]}" == "jq-$install_version" ]; then
+      echo "${asset_urls[$i]}"
+      return
+    fi
+  done
+
+  error_exit  "Given version '$install_version' did not match any releases. Try list-all to see available options"
+}
+find_all_asset_names() {
+  declare install_version="$1"
+
+  declare assets_url="$(get_assets_url "$install_version")"
+  if [ -z "$assets_url" ]; then
+    error_exit "No URL found for release $install_version"
+  fi
+
+  if [ -n "${GITHUB_API_TOKEN:+defined}" ]; then
+    declare assets_json="$(curl -s "$assets_url" -H "Authorization: token $GITHUB_API_TOKEN")"
+  else
+    declare assets_json="$(curl -s "$assets_url")"
+  fi
+  declare -a output=($(echo "$assets_json" | sed -n -E 's/[[:blank:]]*"browser_download_url":[[:blank:]]{0,2}"([^"]{8,})"/\1/p'))
+  echo "${output[@]}"
+}
+filter_assets() {
+  declare -a inArr=($@)
+  declare platform="$(get_platform)";
+  declare arch="$(get_arch)"
+  declare -a filteredArr=()
+  for i in "${inArr[@]}"; do
+    if [ "$arch" == "32" ]; then
+      declare filteredUrl="$(echo "$i" | sed -n -E "/.*$platform.*(86|32)/p" | sed -n -E '/.*86_64.*/!p')"
+      declare canPass="$(echo "$filteredUrl" | sed -n -E 's/.*[[:alpha:]].*/true/p')"
+      if [ "$canPass" == "true" ]; then
+        filteredArr+=("$filteredUrl")
+      fi
+    else
+      declare filteredUrl="$(echo "$i" | sed -n -E "/$platform.*(64)/p")"
+      declare canPass="$(echo "$filteredUrl" | sed -n -E 's/.*[[:alpha:]].*/true/p')"
+      if [ "$canPass" == "true" ]; then
+        filteredArr+=("$filteredUrl")
+      fi
+    fi
+  done
+  echo "${filteredArr[@]}"
+}
+find_file_url() {
+  declare install_version="$1"
+  declare arch="$(get_arch)"
+  declare platform="$(get_platform)"
+  declare -a assets=($(find_all_asset_names "$install_version"))
+  declare -a usableAssets=( "$(filter_assets "${assets[@]}")" )
+
+  if [ "${#usableAssets[@]}" == 0 ]; then
+    error_exit "No releases in version $install_version matching $platform $arch-bits"
+  elif [ "${#usableAssets[@]}" -gt 1  ]; then
+    echo "Multiple releases found matching $platform $arch-bits, choosing first" >&2
+  fi
+
+  echo "${usableAssets[0]}"
+}
+download() {
+  local -r download_type="$1"
+  local -r download_version="$2"
+  local -r download_path="$3"
+  trap 'rm -rf "${download_path?}"' EXIT
+
+  #For future support of source downloads
+  local -r download_url="$(find_file_url "$install_version" "$download_type")"
+  if [ -z "$download_url" ]; then
+    error_exit "Malformed URL"
+  fi
+
+  if [ "$install_type" != "version" ]; then
+    error_exit "Error: source downloads are not supported"
+  fi
+  echo "Downloading from ${download_url}" >&2
+  curl -fL -o "$download_path/jq" "$download_url"
+}
+
+
+download "$ASDF_INSTALL_TYPE" "$ASDF_INSTALL_VERSION" "$ASDF_DOWNLOAD_PATH"

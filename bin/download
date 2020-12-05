@@ -119,7 +119,7 @@ download() {
   trap 'rm -rf "${download_path?}"' EXIT
 
   #For future support of source downloads
-  local -r download_url="$(find_file_url "$install_version" "$download_type")"
+  local -r download_url="$(find_file_url "$download_version" "$download_type")"
   if [ -z "$download_url" ]; then
     error_exit "Malformed URL"
   fi

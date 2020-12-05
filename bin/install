@@ -18,7 +18,7 @@ install() {
   declare -r download_path="$2"
   declare -r install_path="$3"
 
-  if [ "$install_type" == "version"]; then
+  if [ "$install_type" == "version" ]; then
     mkdir "$install_path/bin"
     mv "$download_path/jq" "$install_path/bin"
   else

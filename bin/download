@@ -131,6 +131,8 @@ download() {
     mkdir "$download_path/bin"
     curl -fL -o "$download_path/bin/jq" "$download_url"
   else
+    declare script_path="`dirname \"$0\"`"
+    script_path="`( cd \"$script_path\" && pwd )`"  
     declare platform="$(get_platform)";
     rm -rf "$download_path"
     git init "$download_path"
@@ -139,7 +141,7 @@ download() {
     git fetch --depth=1 origin "$download_version"
     git reset --hard "$download_version"
     if [ "$platform" == "osx" ]; then
-      git apply macos_build.patch
+      git apply "$script_path/macos_build.patch"
     fi
   fi
 }

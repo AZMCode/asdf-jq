@@ -140,6 +140,7 @@ download() {
     git remote add origin "$JQ_REPO"
     git fetch --depth=1 origin "$download_version"
     git reset --hard "$download_version"
+    git submodule update --init --depth=1
     if [ "$platform" == "osx" ]; then
       git apply "$script_path/macos_build.patch"
       cd modules/oniguruma

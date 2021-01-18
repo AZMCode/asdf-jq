@@ -131,12 +131,16 @@ download() {
     mkdir "$download_path/bin"
     curl -fL -o "$download_path/bin/jq" "$download_url"
   else
+    declare platform="$(get_platform)";
     rm -rf "$download_path"
     git init "$download_path"
     cd "$download_path"
     git remote add origin "$JQ_REPO"
     git fetch --depth=1 origin "$download_version"
     git reset --hard "$download_version"
+    if [ "$platform" == "osx" ]; then
+      git apply macos_build.patch
+    fi
   fi
 }
 

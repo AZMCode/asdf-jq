@@ -142,6 +142,8 @@ download() {
     git reset --hard "$download_version"
     if [ "$platform" == "osx" ]; then
       git apply "$script_path/macos_build.patch"
+      cd modules/oniguruma
+      git apply "$script_path/macos_onig.patch"
     fi
   fi
 }

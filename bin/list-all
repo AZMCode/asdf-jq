@@ -7,6 +7,11 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
+plugin_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# shellcheck source=../lib/utils.bash
+source "${plugin_dir}/../lib/utils.bash"
+
 readonly RELEASES_URL="https://api.github.com/repos/stedolan/jq/releases"
 
 # https://github.com/rbenv/ruby-build/blob/ac92ec0507fad718e7abcf13540641937ecfef3f/bin/ruby-build#L1201
@@ -17,9 +22,9 @@ sort_versions() {
 
 list_versions() {
   if [ -n "${GITHUB_API_TOKEN:+defined}" ]; then
-    declare releases="$(curl -fsS --url $RELEASES_URL -H "Authorization: token $GITHUB_API_TOKEN")"
+    declare releases="$(curl_wrapper -fsS "$RELEASES_URL" -H "Authorization: token $GITHUB_API_TOKEN")"
   else
-    declare releases="$(curl -fsS --url $RELEASES_URL)"
+    declare releases="$(curl_wrapper -fsS "$RELEASES_URL")"
   fi
   echo "$(echo "$releases" | grep -oE "tag_name\": *\".*\"," | sed 's/tag_name\": *\"//;s/\",//')"
 }

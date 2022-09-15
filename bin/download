@@ -11,7 +11,7 @@ source "${plugin_dir}/../lib/utils.bash"
 
 declare -r JQ_REPO="https://github.com/stedolan/jq.git"
 declare -r RELEASES_URL="https://api.github.com/repos/stedolan/jq/releases"
-
+declare -r DOWNLOAD_BASE_URL="https://github.com/stedolan/jq/releases/download/"
 
 error_exit() {
   echo "$1" >&2
@@ -27,7 +27,8 @@ get_platform() {
   fi
   return
 }
-get_arch(){
+
+get_arch() {
   declare arch="$(uname -m)"
   if [ "$arch" == 'x86_64' ]; then
     echo '64'
@@ -65,6 +66,7 @@ get_assets_url() {
 
   error_exit  "Given version '$install_version' did not match any releases. Try list-all to see available options"
 }
+
 find_all_asset_names() {
   declare install_version="$1"
 
@@ -81,10 +83,11 @@ find_all_asset_names() {
   declare -a output=($(echo "$assets_json" | sed -n -E 's/[[:blank:]]*"browser_download_url":[[:blank:]]{0,2}"([^"]{8,})"/\1/p'))
   echo "${output[@]}"
 }
+
 filter_assets() {
   declare -a inArr=($@)
 
-  declare platform="$(get_platform)";
+  declare platform="$(get_platform)"
   declare arch="$(get_arch)"
   declare -a filteredArr=()
 
@@ -105,6 +108,7 @@ filter_assets() {
   done
   echo "${filteredArr[@]}"
 }
+
 find_file_url() {
   declare -r install_version="$@"
 
@@ -121,18 +125,40 @@ find_file_url() {
 
   echo "${usableAssets[0]}"
 }
+
 download() {
   declare -r download_type="$1"
   declare -r download_version="$2"
   declare -r download_path="$3"
+  declare -r bin_path="${download_path}/bin/jq"
 
   if [ "$download_type" == "version" ]; then
-    declare -r download_url="$(find_file_url "$download_version")"
-    if [ -z "$download_url" ]; then
-      error_exit "Malformed URL"
+    mkdir "${download_path}/bin"
+
+    declare -r platform=$(get_platform)
+    declare -r arch=$(get_arch)
+    local guessed_file=''
+    if [ $platform = osx ]; then
+      # TODO Support arm64 when jq adds it
+      guessed_file="jq-osx-amd64"
+    elif [ $platform = linux && -n "$arch" ]; then
+      guessed_file="jq-linux$arch"
     fi
-    mkdir "$download_path/bin"
-    curl_wrapper -fsS -L -o "${download_path}/bin/jq" "$download_url"
+    local guess_successful=0
+    if [ -n "$guessed_file" ]; then
+      declare -r guessed_url="${DOWNLOAD_BASE_URL}/jq-${download_version}/${guessed_file}"
+      if curl_wrapper -fsS -L -o "$bin_path" "$guessed_url" 2>/dev/null; then
+        guess_successful=1
+      fi
+    fi
+    
+    if [ $guess_successful = 0 ]; then
+      declare -r download_url=$(find_file_url "$download_version")
+      if [ -z "$download_url" ]; then
+        error_exit "Malformed URL"
+      fi
+      curl_wrapper -fsS -L -o "$bin_path" "$download_url"
+    fi
   else
     rm -rf "$download_path"
     git init "$download_path"
@@ -142,7 +168,6 @@ download() {
     git reset --hard "$download_version"
   fi
 }
-
 
 download "$ASDF_INSTALL_TYPE" "$ASDF_INSTALL_VERSION" "$ASDF_DOWNLOAD_PATH"
 #download ref 2e01ff1fb69609540b2bdc4e62a60499f2b2fb8e ~/Desktop/jqsource

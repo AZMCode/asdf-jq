@@ -12,7 +12,6 @@ error_exit() {
   exit "${2:-1}"
 }
 
-
 install() {
   declare -r install_type="$1"
   declare -r download_path="$2"

@@ -2,7 +2,7 @@
 
 ![](https://github.com/AZMCode/asdf-jq/workflows/ci/badge.svg)
 
-[jq](https://stedolan.github.io/jq/) plugin for the [asdf](https://github.com/asdf-vm/asdf) version manager.
+[jq](https://jqlang.github.io/jq/) plugin for the [asdf](https://github.com/asdf-vm/asdf) version manager.
 
 ## Install
 

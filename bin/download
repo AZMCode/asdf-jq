@@ -9,8 +9,8 @@ plugin_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=../lib/utils.bash
 source "${plugin_dir}/../lib/utils.bash"
 
-declare -r JQ_REPO="https://github.com/stedolan/jq.git"
-declare -r RELEASES_URL="https://api.github.com/repos/stedolan/jq/releases"
+declare -r JQ_REPO="https://github.com/jqlang/jq.git"
+declare -r RELEASES_URL="https://api.github.com/repos/jqlang/jq/releases"
 
 
 error_exit() {

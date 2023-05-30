@@ -12,7 +12,7 @@ plugin_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=../lib/utils.bash
 source "${plugin_dir}/../lib/utils.bash"
 
-readonly RELEASES_URL="https://api.github.com/repos/stedolan/jq/releases"
+readonly RELEASES_URL="https://api.github.com/repos/jqlang/jq/releases"
 
 # https://github.com/rbenv/ruby-build/blob/ac92ec0507fad718e7abcf13540641937ecfef3f/bin/ruby-build#L1201
 sort_versions() {

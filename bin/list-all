@@ -22,9 +22,9 @@ sort_versions() {
 
 list_versions() {
   if [ -n "${GITHUB_API_TOKEN:+defined}" ]; then
-    declare releases="$(curl_wrapper -fsS "$RELEASES_URL" -H "Authorization: token $GITHUB_API_TOKEN")"
+    declare releases="$(curl_wrapper -LfsS "$RELEASES_URL" -H "Authorization: token $GITHUB_API_TOKEN")"
   else
-    declare releases="$(curl_wrapper -fsS "$RELEASES_URL")"
+    declare releases="$(curl_wrapper -LfsS "$RELEASES_URL")"
   fi
   echo "$(echo "$releases" | grep -oE "tag_name\": *\".*\"," | sed 's/tag_name\": *\"//;s/\",//')"
 }

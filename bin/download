@@ -45,9 +45,9 @@ get_assets_url() {
   declare install_version="$1"
 
   if [ -n "${GITHUB_API_TOKEN:+defined}" ]; then
-    declare releases_json="$(curl_wrapper -fsS "$RELEASES_URL" -H "Authorization: token $GITHUB_API_TOKEN")"
+    declare releases_json="$(curl_wrapper -LfsS "$RELEASES_URL" -H "Authorization: token $GITHUB_API_TOKEN")"
   else
-    declare releases_json="$(curl_wrapper -fsS "$RELEASES_URL")"
+    declare releases_json="$(curl_wrapper -LfsS "$RELEASES_URL")"
   fi
 
   declare -a asset_urls
@@ -74,9 +74,9 @@ find_all_asset_names() {
   fi
 
   if [ -n "${GITHUB_API_TOKEN:+defined}" ]; then
-    declare assets_json="$(curl_wrapper -fsS "$assets_url" -H "Authorization: token $GITHUB_API_TOKEN")"
+    declare assets_json="$(curl_wrapper -LfsS "$assets_url" -H "Authorization: token $GITHUB_API_TOKEN")"
   else
-    declare assets_json="$(curl_wrapper -fsS "$assets_url")"
+    declare assets_json="$(curl_wrapper -LfsS "$assets_url")"
   fi
   declare -a output=($(echo "$assets_json" | sed -n -E 's/[[:blank:]]*"browser_download_url":[[:blank:]]{0,2}"([^"]{8,})"/\1/p'))
   echo "${output[@]}"

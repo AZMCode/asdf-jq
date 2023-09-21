@@ -111,7 +111,7 @@ find_file_url() {
   declare -r arch="$(get_arch)"
   declare -r platform="$(get_platform)"
   declare -a assets=($(find_all_asset_names "$install_version"))
-  declare -a usableAssets=( "$(filter_assets "${assets[@]}")" )
+  declare -a usableAssets=($(filter_assets "${assets[@]}"))
 
   if [ "${#usableAssets[@]}" == 0 ]; then
     error_exit "No releases in version $install_version matching $platform $arch-bits"

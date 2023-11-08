@@ -35,6 +35,8 @@ get_arch(){
     echo '32'
   elif [ "$arch" == 'i686' ]; then
     echo '32'
+  elif [ "$arch" == 'arm64' ]; then
+    echo '64'
   else
     error_exit 'Sadly, there are no official releases for your architecture'
   fi
@@ -145,4 +147,3 @@ download() {
 
 
 download "$ASDF_INSTALL_TYPE" "$ASDF_INSTALL_VERSION" "$ASDF_DOWNLOAD_PATH"
-#download ref 2e01ff1fb69609540b2bdc4e62a60499f2b2fb8e ~/Desktop/jqsource

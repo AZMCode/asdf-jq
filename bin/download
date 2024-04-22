@@ -35,6 +35,8 @@ get_arch(){
     echo '32'
   elif [ "$arch" == 'i686' ]; then
     echo '32'
+  elif [ "$arch" == 'arm64' ]; then
+    echo 'arm64'
   else
     error_exit 'Sadly, there are no official releases for your architecture'
   fi

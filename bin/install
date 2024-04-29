@@ -24,7 +24,6 @@ install() {
     chmod a+x "$install_path/bin/jq"
   else
     cd "$download_path"
-    git submodule update --init --depth=1
     autoreconf -fi
     ./configure --disable-maintainer-mode --with-oniguruma=builtin
     make -j8

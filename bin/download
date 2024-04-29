@@ -31,6 +31,8 @@ get_arch(){
   declare arch="$(uname -m)"
   if [ "$arch" == 'x86_64' ]; then
     echo '64'
+  elif [ "$arch" == 'arm64' ]; then
+    echo '64'
   elif [ "$arch" == 'i386' ]; then
     echo '32'
   elif [ "$arch" == 'i686' ]; then
@@ -134,12 +136,21 @@ download() {
     mkdir "$download_path/bin"
     curl_wrapper -fsS -L -o "${download_path}/bin/jq" "$download_url"
   else
+    declare script_path="`dirname \"$0\"`"
+    script_path="`( cd \"$script_path\" && pwd )`"  
+    declare platform="$(get_platform)";
     rm -rf "$download_path"
     git init "$download_path"
     cd "$download_path"
     git remote add origin "$JQ_REPO"
     git fetch --depth=1 origin "$download_version"
     git reset --hard "$download_version"
+    git submodule update --init --depth=1
+    if [ "$platform" == "osx" ]; then
+      git apply "$script_path/macos_build.patch"
+      cd modules/oniguruma
+      git apply "$script_path/macos_onig.patch"
+    fi
   fi
 }
 
